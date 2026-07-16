@@ -97,3 +97,4 @@ docker run -p 8000:8000 --env-file .env --name precip-app precip-prediction
 
 Logistic Regression과 MLP를 0.7 : 0.3 비율로 가중 앙상블한 모델을 사용합니다.
 데이터 분석 및 모델 개발 과정에 대한 상세 내용은 별도 데이터 마이닝 README를 참고하세요.
+## 실험용 브랜치 테스트
