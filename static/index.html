@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>어디서 놀까나</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="chat-intro" id="chatIntro">
+        <div class="bubble left" id="bubble1">내일 어디 갈래</div>
+        <div class="bubble right" id="bubble2">몰라? 어디 갈래</div>
+    </div>
+
+    <div class="cloud" style="left: 5%;"></div>
+    <div class="cloud" style="left: 30%; width: 100px;"></div>
+    <div class="cloud" style="left: 55%; width: 160px;"></div>
+    <div class="cloud" style="left: 80%; width: 90px;"></div>
+
+    <div class="sun-wrap">
+        <div class="sun-rays"></div>
+        <div class="sun-halo"></div>
+        <div class="sun-face"></div>
+        <div class="sun-glasses">
+            <div class="lens"></div>
+            <div class="bridge"></div>
+            <div class="lens"></div>
+        </div>
+        <div class="sun-mouth"></div>
+    </div>
+
+    <div class="main-content" id="mainContent">
+        <h1>어디서 놀까나</h1>
+        <div class="card">
+            <select id="areaSelect">
+                <option value="강남">강남</option>
+                <option value="홍대">홍대</option>
+                <option value="종로">종로</option>
+                <option value="이태원">이태원</option>
+                <option value="잠실">잠실</option>
+            </select>
+            <div id="result">
+                <p class="placeholder">동네를 고르고 확인하기 버튼을 눌러주세요!</p>
+            </div>
+            <button id="predictBtn" onclick="getPrediction()">확인하기</button>
+        </div>
+    </div>
+
+    <script src="js/main.js"></script>
+</body>
+</html>
