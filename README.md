@@ -105,4 +105,4 @@ Logistic Regression과 MLP를 0.7 : 0.3 비율로 가중 앙상블한 모델을 
 - **앙상블로 최종 개선**: 개별 모델 단독 성능보다, Logistic Regression과 MLP를 3:7(MLP:LogReg) 비율로 결합한 앙상블이 가장 우수한 F1을 기록.
 
 전체 실험 과정과 표/그래프 근거는 [EXPERIMENTS.md](./EXPERIMENTS.md)에 정리되어 있습니다.
-데이터 분석 및 모델 개발 과정에 대한 상세 내용은 별도 데이터 마이닝 README를 참고하세요.
+데이터 분석 및 모델 개발 과정에 대한 상세 내용은 별도 [README_DATAMINING.md](./README_DATAMINING.md)를 참고하세요.
