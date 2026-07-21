@@ -23,9 +23,10 @@
 │   ├── logreg_20260715.joblib
 │   ├── mlp_20260715.joblib
 │   └── scaler_20260715.joblib
+├── notebooks/              # 모델 학습/실험 노트북
+│    └── T+n강수여부예측.ipynb  
 ├── data/                  # 원본 학습 데이터
 ├── main.py                # FastAPI 백엔드 서버
-├── T+n강수여부예측.ipynb   # 모델 학습/실험 노트북
 ├── EXPERIMENTS.md          # 모델 개발 과정 전체 시행착오 기록
 ├── requirements.txt       # 파이썬 의존성 명세
 ├── Dockerfile
