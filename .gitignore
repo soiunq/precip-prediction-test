@@ -5,3 +5,4 @@ __pycache__/
 .DS_Store
 .idea/
 data/
+last_prediction_cache.json
