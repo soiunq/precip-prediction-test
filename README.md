@@ -25,8 +25,7 @@
 │   └── scaler_20260715.joblib
 ├── data/                  # 원본 학습 데이터
 ├── main.py                # FastAPI 백엔드 서버
-├── notebooks/             # 모델 학습/실험 노트북
-│   └── T+n강수여부예측.ipynb 
+├── T+n강수여부예측.ipynb   # 모델 학습/실험 노트북
 ├── requirements.txt       # 파이썬 의존성 명세
 ├── Dockerfile
 ├── .dockerignore
@@ -97,4 +96,5 @@ docker run -p 8000:8000 --env-file .env --name precip-app precip-prediction
 ## 모델링 요약
 
 Logistic Regression과 MLP를 0.7 : 0.3 비율로 가중 앙상블한 모델을 사용합니다.
-데이터 분석 및 모델 개발 과정에 대한 상세 내용은 별도 README_DATAMINING.md를 참고하세요.
+데이터 분석 및 모델 개발 과정에 대한 상세 내용은 별도 데이터 마이닝 README를 참고하세요.
+## 실험용 브랜치 테스트
