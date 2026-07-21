@@ -5,6 +5,7 @@ import pandas as pd
 import numpy as np
 import requests
 import os
+import json
 from dotenv import load_dotenv
 from datetime import datetime, timedelta
 
@@ -39,7 +40,7 @@ FEATURE_COLS = [
 ]
 
 
-def fetch_asos_range(days_back=12):
+def _fetch_asos_range_raw(days_back=12):
     end_date = datetime.now()
     start_date = end_date - timedelta(days=days_back - 1)
 
@@ -58,7 +59,6 @@ def fetch_asos_range(days_back=12):
     response = requests.get(url, params=params)
     result = response.json()
 
-    # 오늘 날짜로 요청 시 API가 거부하면 어제까지로 재시도
     if 'body' not in result.get('response', {}):
         end_date = datetime.now() - timedelta(days=1)
         start_date = end_date - timedelta(days=days_back - 1)
@@ -67,6 +67,19 @@ def fetch_asos_range(days_back=12):
         response = requests.get(url, params=params)
         result = response.json()
 
+    return result
+
+
+def fetch_asos_range(days_back=12):
+    now = datetime.now()
+    if (_asos_cache["data"] is not None and
+            _asos_cache["fetched_at"] is not None and
+            (now - _asos_cache["fetched_at"]).total_seconds() < CACHE_TTL_SECONDS):
+        return _asos_cache["data"]
+
+    result = _fetch_asos_range_raw(days_back=days_back)
+    _asos_cache["data"] = result
+    _asos_cache["fetched_at"] = now
     return result
 
 
@@ -215,6 +228,24 @@ def compute_interaction_features(features, valid_items):
     return features
 
 
+CACHE_FILE = "last_prediction_cache.json"
+
+
+def save_cache(data):
+    """마지막 성공한 예측 결과를 파일로 저장"""
+    with open(CACHE_FILE, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False)
+
+
+def load_cache():
+    """저장된 마지막 예측 결과 불러오기"""
+    if not os.path.exists(CACHE_FILE):
+        return None
+    with open(CACHE_FILE, "r", encoding="utf-8") as f:
+        return json.load(f)
+    
+
+
 @app.get("/")
 def read_root():
     """헬스체크용 루트 엔드포인트"""
@@ -249,31 +280,45 @@ def get_weather_label(proba):
 
 @app.get("/predict/today")
 def predict_today():
-    asos_raw = fetch_asos_range(days_back=16)
-    features, valid_items = parse_asos_with_lag(asos_raw)
+    try:
+        asos_raw = fetch_asos_range(days_back=16)
+        features, valid_items = parse_asos_with_lag(asos_raw)
 
-    features.update(compute_rolling_features(valid_items))
-    features.update(compute_month_encoding(features['date']))
-    features = compute_interaction_features(features, valid_items)
+        features.update(compute_rolling_features(valid_items))
+        features.update(compute_month_encoding(features['date']))
+        features = compute_interaction_features(features, valid_items)
 
-    input_df = pd.DataFrame([features])[FEATURE_COLS]
-    input_scaled = scaler.transform(input_df)
+        input_df = pd.DataFrame([features])[FEATURE_COLS]
+        input_scaled = scaler.transform(input_df)
 
-    proba_logreg = model_logreg.predict_proba(input_scaled)[:, 1][0]
-    proba_mlp = model_mlp.predict_proba(input_scaled)[:, 1][0]
+        proba_logreg = model_logreg.predict_proba(input_scaled)[:, 1][0]
+        proba_mlp = model_mlp.predict_proba(input_scaled)[:, 1][0]
 
-    proba_ensemble = proba_logreg * 0.7 + proba_mlp * 0.3
+        proba_ensemble = proba_logreg * 0.7 + proba_mlp * 0.3
 
-    base_date = datetime.strptime(features['date'], "%Y-%m-%d")
-    target_date = (base_date + timedelta(days=1)).strftime("%Y-%m-%d")
+        base_date = datetime.strptime(features['date'], "%Y-%m-%d")
+        target_date = (base_date + timedelta(days=1)).strftime("%Y-%m-%d")
 
-    return {
-        "기준_관측일": features['date'],
-        "예측_대상일": target_date,
-        "강수확률(%)": round(float(proba_ensemble) * 100, 1),
-        "예측": get_weather_label(proba_ensemble),
-        "모델별_확률": {
-            "LogisticRegression(%)": round(float(proba_logreg) * 100, 1),
-            "MLP(%)": round(float(proba_mlp) * 100, 1),
+        result = {
+            "기준_관측일": features['date'],
+            "예측_대상일": target_date,
+            "강수확률(%)": round(float(proba_ensemble) * 100, 1),
+            "예측": get_weather_label(proba_ensemble),
+            "모델별_확률": {
+                "LogisticRegression(%)": round(float(proba_logreg) * 100, 1),
+                "MLP(%)": round(float(proba_mlp) * 100, 1),
+            },
+            "오프라인_모드": False
         }
-    }
+
+        save_cache(result)  # 성공하면 캐시 저장
+        return result
+
+    except (requests.exceptions.ConnectionError, requests.exceptions.Timeout, requests.exceptions.RequestException):
+        # 기상청 API 연결 실패 → 캐시 사용
+        cached = load_cache()
+        if cached is not None:
+            cached["오프라인_모드"] = True
+            return cached
+        else:
+            return {"error": "인터넷 연결이 안 되고, 저장된 캐시도 없습니다."}
