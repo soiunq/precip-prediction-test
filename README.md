@@ -26,6 +26,7 @@
 ├── data/                  # 원본 학습 데이터
 ├── main.py                # FastAPI 백엔드 서버
 ├── T+n강수여부예측.ipynb   # 모델 학습/실험 노트북
+├── EXPERIMENTS.md          # 모델 개발 과정 전체 시행착오 기록
 ├── requirements.txt       # 파이썬 의존성 명세
 ├── Dockerfile
 ├── .dockerignore
@@ -96,5 +97,12 @@ docker run -p 8000:8000 --env-file .env --name precip-app precip-prediction
 ## 모델링 요약
 
 Logistic Regression과 MLP를 0.7 : 0.3 비율로 가중 앙상블한 모델을 사용합니다.
+
+개발 과정에서 확인한 핵심 발견:
+
+- **데이터 누수 발견 및 수정**: 초기 모델은 당일 관측값으로 당일 강수를 맞히는 동시성 구조였음(F1 비정상적으로 높음). 타깃을 익일로 `shift`하여 실제 예측 시점에 알 수 있는 정보만 사용하도록 재설계.
+- **피처 추가가 항상 성능을 높이지는 않음을 실증**: NOAA 기후지수, 장기(14일) rolling, 인접 관측지점 등 여러 방향을 시도했으나 대부분 성능 개선에 실패 — 다중공선성과 노이즈가 원인으로 추정됨.
+- **앙상블로 최종 개선**: 개별 모델 단독 성능보다, Logistic Regression과 MLP를 3:7(MLP:LogReg) 비율로 결합한 앙상블이 가장 우수한 F1을 기록.
+
+전체 실험 과정과 표/그래프 근거는 [EXPERIMENTS.md](./EXPERIMENTS.md)에 정리되어 있습니다.
 데이터 분석 및 모델 개발 과정에 대한 상세 내용은 별도 데이터 마이닝 README를 참고하세요.
-## 실험용 브랜치 테스트
